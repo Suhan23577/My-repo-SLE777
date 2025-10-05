@@ -6,6 +6,9 @@ output:
 date: "2025-10-04"
 ---
 
+# Step 1
+# The two files gene_expression and growth_data, were downloaded, for the given questions and were read.
+
 ```{r}
 
 # download and save files locally
@@ -20,6 +23,8 @@ gene_data <- read.table("gene_expression.tsv", header = TRUE, sep = "\t", row.na
 growth_data <- read.csv("growth_data.csv")
 
 ```
+# Step 2, Q1
+# The read.table() function gets the RNA-seq count data from the TSV file.  The row.names = 1 option makes sure that gene identifiers become row names, which helps you arrange the dataset by genes instead of numbers.
 
 ```{r}
 # Import the tab-separated file
@@ -33,6 +38,9 @@ head(gene_data)
 
 ```
 
+# Step 3, Q2
+# For each gene, rowMeans() finds the average expression across all samples.  This new column, mean_expression, makes it easier to compare genes based on how much they are expressed overall.
+
 ```{r}
 # Add a column for the mean expression value across all samples
 gene_data$mean_expression <- rowMeans(gene_data)
@@ -42,6 +50,9 @@ head(gene_data)
 
 ```
 
+# Step 4, Q3
+# The head() function shows the 10 genes with the highest mean expression by sorting the dataset in that order.  These are the genes in the dataset that are doing the most work.
+
 ```{r}
 # Sort by mean expression and display the top 10
 top10 <- head(gene_data[order(-gene_data$mean_expression), ], 10)
@@ -49,12 +60,18 @@ top10
 
 ```
 
+# Step 5, Q4
+# This step counts the number of genes that have low expression levels (less than 10).  It helps figure out how many genes are poorly expressed, which are generally left out before differential analysis.
+
 ```{r}
 # Count how many genes have mean expression below 10
 low_genes <- sum(gene_data$mean_expression < 10)
 low_genes
 
 ```
+
+# Step 6, Q5
+# The histogram shows how gene expression levels are spread out.  It reveals if most genes are not expressed much or if there are a handful that are expressed a lot.
 
 ```{r}
 # Plot histogram of mean expression values
@@ -67,6 +84,10 @@ hist(gene_data$mean_expression,
 
 ```
 
+# Step 7, Q6
+# The read.csv() method brings in the dataset for tree circumference.  You may use colnames() to look at the real names of the columns so that you can refer to the right variables in later parts of the analysis.
+
+
 ```{r}
 # Read the CSV data
 growth_data <- read.csv("growth_data.csv", header = TRUE)
@@ -75,6 +96,10 @@ growth_data <- read.csv("growth_data.csv", header = TRUE)
 colnames(growth_data)
 
 ```
+
+#Step 8, Q7
+# The aggregate() program puts the data into groups by site and finds the mean and standard deviation for circumference at the beginning (2005) and end (2020).  This demonstrates how the average size of trees and the range of sizes varies between the sites.
+
 
 ```{r}
 colnames(growth_data)
@@ -89,6 +114,10 @@ aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm) ~ Site,
 
 ```
 
+# Step 9, Q8
+# Box plots show how the tree circumferences are spread out between the control and treatment sites for both time periods.  They show how the growth spread and median size changed during the course of the research.
+
+
 ```{r}
 boxplot(Circumf_2005_cm ~ Site, data = growth_data,
         main = "Tree Circumference in 2005 (Start)",
@@ -100,11 +129,17 @@ boxplot(Circumf_2020_cm ~ Site, data = growth_data,
 
 ```
 
+# Step 10, Q9
+# To make a new column, you take the earlier circumference values and subtract them from the later ones.  This displays how much each tree has grown, and average by location indicates which group has grown the most over time.
+
 ```{r}
 growth_data$growth_2010_2020 <- growth_data$Circumf_2020_cm - growth_data$Circumf_2010_cm
 aggregate(growth_2010_2020 ~ Site, data = growth_data, mean)
 
 ```
+
+# Step 11, Q10
+# The t.test() compares the average growth between the two sites.  If the p-value is less than 0.05, it means that the difference in growth between the control and treatment groups is statistically significant.
 
 ```{r}
 t.test(growth_2010_2020 ~ Site, data = growth_data)
@@ -117,6 +152,9 @@ aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm) ~ Site,
           FUN = function(x) c(mean = mean(x), sd = sd(x)))
 
 ```
+
+# Step 12
+# This code first makes sure that the circumference columns for 2005 and 2020 are numbers. This way, computations will be correct even if they were imported as text.  Then, it utilizes the aggregate() method to combine the data set by site (Control and Treatment) and get the mean and standard deviation of tree circumference for each year, leaving out any missing values.  The output from aggregate() keeps these findings in a nested structure. The following step takes the mean and standard deviation numbers and puts them into a neat, easy-to-read data frame that shows the average and variation for each location at both time points.  Lastly, the print(out) command makes sure that the summary table is shown correctly in the output or report.
 
 ```{r}
 ## Make sure columns are numeric (safe if they already are)

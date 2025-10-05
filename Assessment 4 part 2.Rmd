@@ -1,0 +1,515 @@
+---
+title: "Assessment 4 Part 2"
+output:
+  pdf_document: default
+  html_document: default
+date: "2025-09-27"
+---
+
+```{r}
+suppressPackageStartupMessages({
+  library("seqinr") # is a package designed to process and analyse sequence data.
+  library("R.utils") # general utilities like zip and unzip
+})
+```
+
+```{r}
+
+library(R.utils)
+
+
+# ---- Download Saprospirales bacterium CDS ----
+sapro_url <- "https://ftp.ensemblgenomes.ebi.ac.uk/pub/bacteria/release-62/fasta/bacteria_58_collection/saprospirales_bacterium_gca_003448025/cds/Saprospirales_bacterium_gca_003448025.ASM344802v1.cds.all.fa.gz"
+
+# Save compressed file
+download.file(sapro_url, destfile = "sapro_cds.fa.gz", mode = "wb")
+
+# Unzip .gz to plain .fa
+gunzip("sapro_cds.fa.gz", destname = "sapro_cds.fa", overwrite = TRUE, remove = TRUE)
+
+# ---- Read CDS into R ----
+sapro_cds <- read.fasta(file = "sapro_cds.fa", seqtype = "DNA", as.string = FALSE)
+
+# Quick check: number of coding sequences
+length(sapro_cds)
+
+```
+```{r}
+library("R.utils")
+
+URL="http://ftp.ensemblgenomes.org/pub/bacteria/release-53/fasta/bacteria_0_collection/escherichia_coli_str_k_12_substr_mg1655_gca_000005845/cds/Escherichia_coli_str_k_12_substr_mg1655_gca_000005845.ASM584v2.cds.all.fa.gz"
+download.file(URL,destfile="ecoli_cds.fa.gz")
+list.files()
+```
+```{r}
+# Read FASTA as DNA sequences
+ecoli_cds <- read.fasta(file = "ecoli_cds.fa", seqtype = "DNA", as.string = FALSE)
+sapro_cds <- read.fasta(file = "sapro_cds.fa", seqtype = "DNA", as.string = FALSE)
+
+# Count the number of CDS
+n_ecoli <- length(ecoli_cds)
+n_sapro <- length(sapro_cds)
+
+# Make comparison table
+cds_counts <- data.frame(
+  Organism = c("E. coli K-12 MG1655", "Saprospirales bacterium (GCA_003448025)"),
+  Number_of_CDS = c(n_ecoli, n_sapro)
+)
+
+cds_counts
+
+```
+```{r}
+# Get CDS lengths for each sequence
+ecoli_cds_lengths <- vapply(ecoli_cds, length, integer(1))
+sapro_cds_lengths <- vapply(sapro_cds, length, integer(1))
+
+# Total coding DNA (bp)
+total_ecoli <- sum(ecoli_cds_lengths)
+total_sapro <- sum(sapro_cds_lengths)
+
+# Make comparison table
+coding_dna_tbl <- data.frame(
+  Organism = c("E. coli K-12 MG1655", "Saprospirales bacterium (GCA_003448025)"),
+  Total_Coding_bp = c(total_ecoli, total_sapro)
+)
+
+coding_dna_tbl
+
+```
+
+```{r}
+# --- Calculate CDS lengths ---
+ecoli_cds_lengths <- vapply(ecoli_cds, length, integer(1))
+sapro_cds_lengths <- vapply(sapro_cds, length, integer(1))
+
+# --- Summary statistics ---
+mean_ecoli   <- mean(ecoli_cds_lengths)
+median_ecoli <- median(ecoli_cds_lengths)
+mean_sapro   <- mean(sapro_cds_lengths)
+median_sapro <- median(sapro_cds_lengths)
+
+cds_stats_tbl <- data.frame(
+  Organism = c("E. coli K-12 MG1655", "Saprospirales bacterium (GCA_003448025)"),
+  Mean_CDS_length_bp   = c(mean_ecoli, mean_sapro),
+  Median_CDS_length_bp = c(median_ecoli, median_sapro)
+)
+
+cds_stats_tbl
+
+# --- Boxplot of CDS lengths ---
+boxplot(list(
+    `E. coli` = ecoli_cds_lengths,
+    `Saprospirales` = sapro_cds_lengths
+  ),
+  ylab = "CDS length (bp)",
+  main = "Distribution of CDS lengths",
+  col = c("lavender", "lightpink")
+)
+
+```
+
+```{r}
+
+ecoli_fa <- "ecoli_cds.fa"
+sapro_fa <- "sapro_cds.fa"
+
+# Read as DNA (each entry is one CDS)
+ecoli_cds <- read.fasta(file = ecoli_fa, seqtype = "DNA", as.string = FALSE)
+sapro_cds <- read.fasta(file = sapro_fa, seqtype = "DNA", as.string = FALSE)
+
+length(ecoli_cds); length(sapro_cds)  # quick sanity check (CDS counts)
+
+```
+```{r}
+concat_dna <- function(dna_list) {
+  unlist(dna_list, use.names = FALSE)
+}
+
+ecoli_all_dna <- concat_dna(ecoli_cds)
+sapro_all_dna <- concat_dna(sapro_cds)
+
+```
+
+```{r}
+nt_bases <- c("A","C","G","T")
+
+nt_freq <- function(chars, bases = nt_bases) {
+  up <- toupper(chars)
+  keep <- up %in% bases
+  up <- up[keep]
+  prop <- as.numeric(table(factor(up, levels = bases)))
+  prop / sum(prop)
+}
+
+ecoli_nt <- nt_freq(ecoli_all_dna)
+sapro_nt <- nt_freq(sapro_all_dna)
+
+# Table for your report
+nt_freq_tbl <- rbind(`E. coli` = setNames(ecoli_nt, nt_bases),
+                     `Saprospirales` = setNames(sapro_nt, nt_bases))
+nt_freq_tbl
+
+```
+
+```{r}
+par(mfrow = c(1,2))
+barplot(ecoli_nt, names.arg = nt_bases, ylab = "Proportion",
+        main = "E. coli: nucleotide frequency")
+barplot(sapro_nt, names.arg = nt_bases, ylab = "Proportion",
+        main = "Saprospirales: nucleotide frequency")
+par(mfrow = c(1,1))
+
+```
+
+```{r}
+# Translate one CDS safely (trim to multiple of 3; keep A/C/G/T)
+translate_one <- function(dna_vec) {
+  v <- toupper(dna_vec)
+  v <- v[v %in% c("A","C","G","T")]
+  L3 <- length(v) - (length(v) %% 3)
+  if (L3 <= 0) return(character(0))
+  v <- v[seq_len(L3)]
+  translate(v, numcode = 1)  # standard code
+}
+
+# Translate all CDS and concatenate proteins
+concat_prot_from_cds <- function(dna_list) {
+  aa_list <- lapply(dna_list, translate_one)
+  aa <- unlist(aa_list, use.names = FALSE)
+  aa[aa != "*"]  # drop stop symbols
+}
+
+ecoli_all_aa <- concat_prot_from_cds(ecoli_cds)
+sapro_all_aa <- concat_prot_from_cds(sapro_cds)
+
+```
+
+```{r}
+aa_letters <- c("A","R","N","D","C","Q","E","G","H","I",
+                "L","K","M","F","P","S","T","W","Y","V")
+
+aa_freq <- function(aa_vec, aas = aa_letters) {
+  up <- toupper(aa_vec)
+  keep <- up %in% aas
+  up <- up[keep]
+  prop <- as.numeric(table(factor(up, levels = aas)))
+  prop / sum(prop)
+}
+
+ecoli_aa <- aa_freq(ecoli_all_aa)
+sapro_aa <- aa_freq(sapro_all_aa)
+
+# Table for your report
+aa_freq_tbl <- rbind(`E. coli` = setNames(ecoli_aa, aa_letters),
+                     `Saprospirales` = setNames(sapro_aa, aa_letters))
+aa_freq_tbl
+
+```
+
+```{r}
+par(mfrow = c(1,2))
+barplot(ecoli_aa, names.arg = aa_letters, las = 2, ylab = "Proportion",
+        main = "E. coli: amino acid frequency")
+barplot(sapro_aa, names.arg = aa_letters, las = 2, ylab = "Proportion",
+        main = "Saprospirales: amino acid frequency")
+par(mfrow = c(1,1))
+
+```
+
+```{r}
+# Helper: concatenate DNA list into vector
+concat_dna <- function(dna_list) {
+  unlist(dna_list, use.names = FALSE)
+}
+
+# Helper: count codons in a DNA vector
+count_codons <- function(dna_vec) {
+  dna <- toupper(dna_vec)
+  dna <- dna[dna %in% c("A","C","G","T")]       # keep only valid bases
+  L3 <- length(dna) - (length(dna) %% 3)       # trim to multiple of 3
+  if (L3 <= 0) return(character(0))
+  codons <- sapply(seq(1, L3, by = 3), function(i) paste0(dna[i:(i+2)], collapse=""))
+  table(codons)
+}
+
+# Count codons
+ecoli_codons <- count_codons(concat_dna(ecoli_cds))
+sapro_codons <- count_codons(concat_dna(sapro_cds))
+
+```
+
+
+```{r}
+# Convert raw codon counts into a usage table (frequencies)
+codon_usage <- function(codon_counts) {
+  codon_counts / sum(codon_counts)
+}
+
+ecoli_usage <- codon_usage(ecoli_codons)
+sapro_usage <- codon_usage(sapro_codons)
+
+# Put into one data frame for comparison
+usage_table <- data.frame(
+  Codon = names(ecoli_usage),
+  Ecoli = as.numeric(ecoli_usage[names(ecoli_usage)]),
+  Saprospirales = as.numeric(sapro_usage[names(ecoli_usage)])
+)
+head(usage_table)
+
+```
+
+```{r}
+# ---- Expect two named vectors of raw counts ----
+if (!exists("ecoli_codons") || !exists("sapro_codons"))
+  stop("Please create `ecoli_codons` and `sapro_codons` first (your earlier code does this).")
+
+# All DNA codons and sense codons (no stops)
+.bases <- c("T","C","A","G")
+.all_codons <- as.vector(outer(outer(.bases, .bases, paste0), .bases, paste0))
+.stop_codons <- c("TAA","TAG","TGA")
+.sense_codons <- setdiff(.all_codons, .stop_codons)
+
+# Ensure both count vectors contain all 61 sense codons (fill absent ones with 0)
+fill61 <- function(x) {
+  x <- x[names(x) %in% .sense_codons]              # drop any stray keys
+  y <- setNames(rep(0L, length(.sense_codons)), .sense_codons)
+  y[names(x)] <- as.integer(x)
+  y
+}
+ecoli_counts <- fill61(ecoli_codons)
+sapro_counts <- fill61(sapro_codons)
+
+# (Optional) reorder alphabetically for consistent plotting
+ecoli_counts <- ecoli_counts[order(names(ecoli_counts))]
+sapro_counts <- sapro_counts[names(ecoli_counts)]
+
+```
+
+```{r}
+codon_usage <- function(counts61) counts61 / sum(counts61)
+
+ecoli_usage <- codon_usage(ecoli_counts)
+sapro_usage <- codon_usage(sapro_counts)
+
+# Usage table to view / export
+usage_table <- data.frame(
+  Codon = names(ecoli_usage),
+  E_coli = as.numeric(ecoli_usage),
+  Saprospirales = as.numeric(sapro_usage),
+  row.names = NULL
+)
+head(usage_table, 10)   # preview
+
+```
+
+```{r}
+# Synonymous codon families (Standard Code, DNA, no stops)
+fam <- list(
+  Phe=c("TTT","TTC"),
+  Leu=c("TTA","TTG","CTT","CTC","CTA","CTG"),
+  Ile=c("ATT","ATC","ATA"),
+  Met=c("ATG"),
+  Val=c("GTT","GTC","GTA","GTG"),
+  Ser=c("TCT","TCC","TCA","TCG","AGT","AGC"),
+  Pro=c("CCT","CCC","CCA","CCG"),
+  Thr=c("ACT","ACC","ACA","ACG"),
+  Ala=c("GCT","GCC","GCA","GCG"),
+  Tyr=c("TAT","TAC"),
+  His=c("CAT","CAC"),
+  Gln=c("CAA","CAG"),
+  Asn=c("AAT","AAC"),
+  Lys=c("AAA","AAG"),
+  Asp=c("GAT","GAC"),
+  Glu=c("GAA","GAG"),
+  Cys=c("TGT","TGC"),
+  Trp=c("TGG"),
+  Arg=c("CGT","CGC","CGA","CGG","AGA","AGG"),
+  Gly=c("GGT","GGC","GGA","GGG")
+)
+
+# RSCU calculator (counts61 is a named vector over the 61 sense codons)
+rscu <- function(counts61, families=fam) {
+  out <- setNames(rep(NA_real_, length(counts61)), names(counts61))
+  for (aa in names(families)) {
+    cods <- families[[aa]]
+    N <- sum(counts61[cods])
+    if (N == 0) { out[cods] <- NA_real_; next }
+    m <- length(cods)
+    expected <- N / m
+    out[cods] <- counts61[cods] / expected
+  }
+  out
+}
+
+ecoli_rscu <- rscu(ecoli_counts)
+sapro_rscu <- rscu(sapro_counts)
+
+# Table to view
+rscu_table <- data.frame(
+  Codon = names(ecoli_rscu),
+  AA = rep(names(fam), lengths(fam)),
+  E_coli = as.numeric(ecoli_rscu),
+  Saprospirales = as.numeric(sapro_rscu),
+  row.names = NULL
+)
+head(rscu_table, 10)
+```
+
+
+```{r}
+# F-value for a family (Wright 1990)
+.F_family <- function(n) {
+  N <- sum(n)
+  if (N == 0) return(NA_real_)
+  p <- n / N
+  (sum(p^2) - 1/N) / (1 - 1/N)
+}
+
+ENC_from_counts <- function(counts61, families=fam) {
+  # group F by family size
+  F2 <- c(); F3 <- c(); F4 <- c(); F6 <- c()
+  for (aa in names(families)) {
+    cods <- families[[aa]]
+    n <- counts61[cods]
+    F <- .F_family(n)
+    k <- length(cods)
+    if (is.na(F)) next
+    if (k==2) F2 <- c(F2, F)
+    if (k==3) F3 <- c(F3, F)
+    if (k==4) F4 <- c(F4, F)
+    if (k==6) F6 <- c(F6, F)
+    # k==1 (Met/Trp) are counted as 2 in ENC's baseline constant below
+  }
+  # Use means over families present
+  f2 <- if (length(F2)) mean(F2) else NA_real_
+  f3 <- if (length(F3)) mean(F3) else NA_real_
+  f4 <- if (length(F4)) mean(F4) else NA_real_
+  f6 <- if (length(F6)) mean(F6) else NA_real_
+
+  # Wright's approximation:
+  ENC <- 2 + 
+         if (!is.na(f2)) 9/f2 else 0 +
+         if (!is.na(f3)) 5/f3 else 0 +
+         if (!is.na(f4)) 3/f4 else 0 +
+         if (!is.na(f6)) 1/f6 else 0
+  ENC
+}
+
+enc_ecoli <- ENC_from_counts(ecoli_counts)
+enc_sapro <- ENC_from_counts(sapro_counts)
+enc_ecoli; enc_sapro
+
+```
+
+```{r}
+par(mar=c(9,4,2,1))
+barplot(rbind(ecoli_usage, sapro_usage),
+        beside=TRUE, las=2, ylab="Frequency",
+        legend.text=c("E. coli","Saprospirales"),
+        args.legend=list(x="topright", bty="n", inset=0.01),
+        main="Codon usage frequencies")
+
+```
+
+```{r}
+# Order by amino-acid groups for readability
+ord <- unlist(fam, use.names = FALSE)
+ord <- ord[ord %in% names(ecoli_rscu)]
+par(mar=c(9,4,2,1))
+barplot(rbind(ecoli_rscu[ord], sapro_rscu[ord]),
+        beside=TRUE, las=2, ylab="RSCU",
+        legend.text=c("E. coli","Saprospirales"),
+        args.legend=list(x="topright", bty="n", inset=0.01),
+        main="Relative Synonymous Codon Usage (RSCU)")
+abline(h=1, lty=2)
+
+```
+
+```{r}
+delta_rscu <- ecoli_rscu - sapro_rscu
+par(mar=c(9,4,2,1))
+barplot(delta_rscu[ord], las=2, ylab="ΔRSCU (E.coli - Sapro)",
+        main="Preference difference by codon (ΔRSCU)")
+abline(h=0, lty=2)
+
+```
+
+```{r}
+# -------------------
+# Step 1: Translate CDS to proteins
+# -------------------
+library(seqinr)
+
+translate_one <- function(dna_vec) {
+  n <- length(dna_vec)
+  if (n < 3) return(character(0))
+  n3 <- n - (n %% 3)
+  aa <- translate(dna_vec[1:n3])
+  aa[aa != "*" & aa != "X"]   # drop stops and unknowns
+}
+
+ecoli_prot <- lapply(ecoli_cds, translate_one)
+sapro_prot <- lapply(sapro_cds, translate_one)   # organism of interest
+
+# -------------------
+# Step 2: k-mer counting (lengths 3–5)
+# -------------------
+get_kmers <- function(aa_seq, k) {
+  if (length(aa_seq) < k) return(character(0))
+  sapply(1:(length(aa_seq)-k+1), function(i) paste(aa_seq[i:(i+k-1)], collapse=""))
+}
+
+count_protein_kmers <- function(prot_list, k_range=3:5) {
+  kmers <- unlist(lapply(prot_list, function(p) {
+    unlist(lapply(k_range, function(k) get_kmers(p, k)))
+  }))
+  table(kmers)
+}
+
+
+# -------------------
+# Step 3: Normalize to frequencies
+# -------------------
+freq_norm <- function(tbl) tbl/sum(tbl)
+ef <- freq_norm(ecoli_kmers)
+sf <- freq_norm(sapro_kmers)
+
+all_k <- union(names(ef), names(sf))
+ef <- ef[all_k]; ef[is.na(ef)] <- 0
+sf <- sf[all_k]; sf[is.na(sf)] <- 0
+
+df <- data.frame(
+  kmer = all_k,
+  Ecoli = as.numeric(ef),
+  Sapro = as.numeric(sf)
+)
+
+# -------------------
+# Step 4: Compute enrichment (log2 fold-change Sapro vs E.coli)
+# -------------------
+df$log2FC <- log2((df$Sapro + 1e-9)/(df$Ecoli + 1e-9))
+
+top_over  <- head(df[order(-df$log2FC), ], 10)  # most enriched in Sapro
+top_under <- head(df[order(df$log2FC), ], 10)   # most depleted in Sapro
+
+top_over
+top_under
+
+# -------------------
+# Step 5: Plot results
+# -------------------
+par(mfrow=c(1,2), mar=c(8,4,3,1))
+
+barplot(top_over$log2FC, names.arg=top_over$kmer, las=2,
+        col="lightpink", main="Top 10 Over-represented\nSapro vs E.coli",
+        ylab="log2FC")
+
+barplot(top_under$log2FC, names.arg=top_under$kmer, las=2,
+        col="lavender", main="Top 10 Under-represented\nSapro vs E.coli",
+        ylab="log2FC")
+
+```
+
+
+
