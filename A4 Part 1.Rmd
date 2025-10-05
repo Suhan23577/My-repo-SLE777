@@ -1,0 +1,146 @@
+---
+title: "A4 part 1"
+output:
+  pdf_document: default
+  html_document: default
+date: "2025-10-04"
+---
+
+```{r}
+
+# download and save files locally
+download.file("https://raw.githubusercontent.com/ghazkha/Assessment4/main/gene_expression.tsv",
+              destfile = "gene_expression.tsv")
+
+download.file("https://raw.githubusercontent.com/ghazkha/Assessment4/main/growth_data.csv",
+              destfile = "growth_data.csv")
+
+# now you can read them
+gene_data <- read.table("gene_expression.tsv", header = TRUE, sep = "\t", row.names = 1)
+growth_data <- read.csv("growth_data.csv")
+
+```
+
+```{r}
+# Import the tab-separated file
+gene_data <- read.table("gene_expression.tsv", 
+                        header = TRUE, 
+                        sep = "\t", 
+                        row.names = 1)
+
+# View the first 6 genes (rows)
+head(gene_data)
+
+```
+
+```{r}
+# Add a column for the mean expression value across all samples
+gene_data$mean_expression <- rowMeans(gene_data)
+
+# Display the first six genes again
+head(gene_data)
+
+```
+
+```{r}
+# Sort by mean expression and display the top 10
+top10 <- head(gene_data[order(-gene_data$mean_expression), ], 10)
+top10
+
+```
+
+```{r}
+# Count how many genes have mean expression below 10
+low_genes <- sum(gene_data$mean_expression < 10)
+low_genes
+
+```
+
+```{r}
+# Plot histogram of mean expression values
+hist(gene_data$mean_expression,
+     main = "Distribution of Mean Gene Expression",
+     xlab = "Mean Expression Value",
+     ylab = "Frequency",
+     col = "lavender",
+     border = "pink")
+
+```
+
+```{r}
+# Read the CSV data
+growth_data <- read.csv("growth_data.csv", header = TRUE)
+
+# Display column names
+colnames(growth_data)
+
+```
+
+```{r}
+colnames(growth_data)
+
+```
+
+```{r}
+aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm) ~ Site, 
+          data = growth_data,
+          FUN = function(x) c(mean = mean(x, na.rm = TRUE),
+                              sd = sd(x, na.rm = TRUE)))
+
+```
+
+```{r}
+boxplot(Circumf_2005_cm ~ Site, data = growth_data,
+        main = "Tree Circumference in 2005 (Start)",
+        ylab = "Circumference (cm)", col = "pink")
+
+boxplot(Circumf_2020_cm ~ Site, data = growth_data,
+        main = "Tree Circumference in 2020 (End)",
+        ylab = "Circumference (cm)", col = "lavender")
+
+```
+
+```{r}
+growth_data$growth_2010_2020 <- growth_data$Circumf_2020_cm - growth_data$Circumf_2010_cm
+aggregate(growth_2010_2020 ~ Site, data = growth_data, mean)
+
+```
+
+```{r}
+t.test(growth_2010_2020 ~ Site, data = growth_data)
+
+```
+
+```{r}
+aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm) ~ Site, 
+          data = growth_data,
+          FUN = function(x) c(mean = mean(x), sd = sd(x)))
+
+```
+
+```{r}
+## Make sure columns are numeric (safe if they already are)
+growth_data$Circumf_2005_cm <- as.numeric(growth_data$Circumf_2005_cm)
+growth_data$Circumf_2020_cm <- as.numeric(growth_data$Circumf_2020_cm)
+
+## Compute mean & sd by Site
+agg <- aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm) ~ Site,
+                 data = growth_data,
+                 FUN = function(x) c(mean = mean(x, na.rm = TRUE),
+                                     sd   = sd(x,   na.rm = TRUE)))
+
+## Unnest the matrix columns into a clean data frame
+out <- data.frame(
+  Site       = agg$Site,
+  Start_mean = agg$Circumf_2005_cm[, "mean"],
+  Start_sd   = agg$Circumf_2005_cm[, "sd"],
+  End_mean   = agg$Circumf_2020_cm[, "mean"],
+  End_sd     = agg$Circumf_2020_cm[, "sd"],
+  row.names = NULL
+)
+
+## FORCE the display (works in scripts, Rmd, and notebooks)
+print(out)
+
+```
+
