@@ -121,9 +121,18 @@ t.test(growth_2010_2020 ~ Site, data = growth_data)
 # Purpose of each script
 The 00_setup.R script gets the environment ready by making the files it needs, checking for packages, and setting up functions that will be useful.  This script is called 01_part1_gene_expression. R reads the gene expression file, writes the gene identifiers as row names, finds the ten genes with the highest mean expression values, counts the genes whose mean expression value is less than 10, and makes a plot of those mean expression values.  The code for 02_part1_growth_analysis. The tree growth data is imported into R, column names are listed, and the mean and standard deviation for circumference are found at both sites (the beginning and end of the study). Boxplots are made to show how growth has changed at each site, the mean 10-year growth is found, and a t-test is used to compare growth between the control and treatment sites.
 
+# Troubleshooting
+Install TinyTeX with tinytex::install_tinytex() if the RMarkdown report doesn't knit to PDF. You can also knit the report to PDF instead.  To add missing packages, just run 00_setup.R again or do it by hand.  If you don't see any plot files, make sure the working path is set properly and that the outputs/part1 folder is present.  When set up correctly, these tools have been tested to run without any problems.
 
+# Data Citation
+The information used in Part 1 comes from the "Assessment4" GitHub project, which is open to everyone.  You can use the datasets for educational reasons, and when you quote them, use "Assessment4 data files (gene_expression.tsv and growth_data.csv), 2025, GitHub repository."
 
+# Academic Intregrity
+This library holds the results of independent research.  There is no copied code or work, and some AI tools are used.  To keep academic ethics and make sure that the records can be used again, they have not been changed.  Structure and comments are included to help others understand the analysis process in a clear way.
 
+# License and Authorship
+Author- Suhan Mhatre
+License- MIT
 
 
 
