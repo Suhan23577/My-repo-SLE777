@@ -20,7 +20,8 @@ gene_data <- read.table("gene_expression.tsv", header = TRUE, sep = "\t", row.na
 growth_data <- read.csv("growth_data.csv")
 
 # How to Run
-1. Read file with gene IDs as row names; show first six genes
+1. Read file with gene IDs as row names; show first six genes-
+
 Import the tab-separated file
 gene_data <- read.table("gene_expression.tsv", 
                         header = TRUE, 
@@ -30,24 +31,28 @@ gene_data <- read.table("gene_expression.tsv",
 View the first 6 genes (rows)
 head(gene_data)
 
-2. Add a mean column; show first six
+2. Add a mean column; show first six-
+
 Add a column for the mean expression value across all samples
 gene_data$mean_expression <- rowMeans(gene_data)
 
 Display the first six genes again
 head(gene_data)
 
-3. List top 10 genes by mean expression
+3. List top 10 genes by mean expression-
+
 Sort by mean expression and display the top 10
 top10 <- head(gene_data[order(-gene_data$mean_expression), ], 10)
 top10
 
-4. Count genes with mean < 10
+4. Count genes with mean < 10-
+
 Count how many genes have mean expression below 10
 low_genes <- sum(gene_data$mean_expression < 10)
 low_genes
 
-5. Histogram of mean values
+5. Histogram of mean values-
+
 Plot histogram of mean expression values
 hist(gene_data$mean_expression,
      main = "Distribution of Mean Gene Expression",
@@ -56,14 +61,16 @@ hist(gene_data$mean_expression,
      col = "lavender",
      border = "pink")
 
-6. Import CSV; print column names
+6. Import CSV; print column names-
+
 Read the CSV data
 growth_data <- read.csv("growth_data.csv", header = TRUE)
 
 Display column names
 colnames(growth_data)
 
-7. Mean & SD at start (2005) and end (2020) by site
+7. Mean & SD at start (2005) and end (2020) by site-
+
 aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm) ~ Site, 
           data = growth_data,
           FUN = function(x) c(mean = mean(x, na.rm = TRUE),
@@ -91,7 +98,8 @@ out <- data.frame(
 FORCE the display (works in scripts, Rmd, and notebooks)
 print(out)
 
-8. Boxplots at start vs end by site
+8. Boxplots at start vs end by site-
+
 boxplot(Circumf_2005_cm ~ Site, data = growth_data,
         main = "Tree Circumference in 2005 (Start)",
         ylab = "Circumference (cm)", col = "pink")
@@ -100,19 +108,23 @@ boxplot(Circumf_2020_cm ~ Site, data = growth_data,
         main = "Tree Circumference in 2020 (End)",
         ylab = "Circumference (cm)", col = "lavender")
 
-9. Mean growth over last 10 years at each site
+9. Mean growth over last 10 years at each site-
+
 growth_data$growth_2010_2020 <- growth_data$Circumf_2020_cm - growth_data$Circumf_2010_cm
 aggregate(growth_2010_2020 ~ Site, data = growth_data, mean)
 
-10. t-test: is 10-year growth different between sites
+10. t-test: is 10-year growth different between sites-
+
 t.test(growth_2010_2020 ~ Site, data = growth_data)
 
 
 # Purpose of each script
+The 00_setup.R script gets the environment ready by making the files it needs, checking for packages, and setting up functions that will be useful.  This script is called 01_part1_gene_expression. R reads the gene expression file, writes the gene identifiers as row names, finds the ten genes with the highest mean expression values, counts the genes whose mean expression value is less than 10, and makes a plot of those mean expression values.  The code for 02_part1_growth_analysis. The tree growth data is imported into R, column names are listed, and the mean and standard deviation for circumference are found at both sites (the beginning and end of the study). Boxplots are made to show how growth has changed at each site, the mean 10-year growth is found, and a t-test is used to compare growth between the control and treatment sites.
 
 
 
 
 
-#
+
+
 
