@@ -58,7 +58,7 @@ get_total_nt <- function(x) {
   stop("Unsupported type for cds object")
 }
 
-# Compute totals and make the table (expects orgA_name, orgB_name to be defined)
+ Compute totals and make the table (expects orgA_name, orgB_name to be defined)
 total_nt_A <- get_total_nt(cdsA)
 total_nt_B <- get_total_nt(cdsB)
 
@@ -439,3 +439,17 @@ res_k5 <- analyze_k(aaA, aaB, k = 5, ref_label = orgA_name, test_label = orgB_na
 
 
 # Purpose of each script
+These are the part2_download_sequences. The R tool gets the CDS and protein FASTA files for both the species.  These are the part2_sequence_summaries. The R script counts the genes, figures out the length of all the coding DNA, and makes boxplots that show how the CDS lengths are distributed.  The frequency and codon for 05_part2_comp. The R script figures out the rates of nucleotides and amino acids, shows them with barplots, and makes codon usage tables with bias measures like RSCU values.  Last but not least, 06_part2_kmer_enrichment. R finds over- and under-represented protein k-mers (length 3–5) in the Saprospirales bacteria, compares them to E. coli, and makes barplots that show changes in sequence bias.
+
+# Troubleshooting
+If a series of downloads fails, delete any that aren't finished. file and run 03_part2_download_sequences.R again.  Put in TinyTeX or knit to HTML format instead if the report won't knit because of LaTeX problems.  Before running the scripts, make sure that all of the relevant packages have been loaded.  If memory errors happen while FASTA parsing, close all other programs and try again; the sequences are pretty small and usually load without any problems.
+
+# Data Citation
+The CDS data that was used in this study came from NCBI and Ensembl Bacteria.  All of the datasets are free to use and are meant to be used for learning.  Use the phrase "Ensembl Bacteria release 62 and NCBI RefSeq data for E. coli and Saprospirales bacterium" when you cite them.
+
+# Academic Integrity
+This library holds the results of independent research. There is no copied code or work, and some AI tools are used. To keep academic ethics and make sure that the records can be used again, they have not been changed. Structure and comments are included to help others understand the analysis process in a clear way.
+
+# License and Authorship
+Author- Suhan Mhatre
+License- MIT
