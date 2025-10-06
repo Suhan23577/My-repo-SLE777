@@ -6,6 +6,9 @@ output:
 date: "2025-09-27"
 ---
 
+# Step 1
+# Used for knit tool
+
 ```{r 000-ensure-cdsA, include=FALSE}
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 suppressPackageStartupMessages(library(seqinr))
