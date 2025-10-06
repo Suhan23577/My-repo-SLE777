@@ -451,5 +451,5 @@ The CDS data that was used in this study came from NCBI and Ensembl Bacteria.  A
 This library holds the results of independent research. There is no copied code or work, and some AI tools are used. To keep academic ethics and make sure that the records can be used again, they have not been changed. Structure and comments are included to help others understand the analysis process in a clear way.
 
 # License and Authorship
-Author- Suhan Mhatre
+Author- Suhan Mhatre, 
 License- MIT
