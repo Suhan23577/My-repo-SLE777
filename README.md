@@ -7,4 +7,17 @@ This repository has R tools and a R Markdown report that can be used with RStudi
 # Repository Structure
 The repository is set up so that it is easy to understand and use again.  Files like gene_expression.tsv and growth_data.csv are stored in the data/ folder.  There are two subfolders, part1/ and part2/, inside the outputs/ folder that hold all the figures and tables that were made.  There are several R scripts in the scripts/ directory. Each one does a different part of the project, from importing and organizing data to visualizing it and analyzing sequences.  These tools are put together in the main R Markdown file, report.Rmd, to make the end report.  For faster work in RStudio and GitHub, supporting files like.Rproj and.gitignore are included.
 
-# Software Requirments
+# Data Sources
+# download and save files locally
+download.file("https://raw.githubusercontent.com/ghazkha/Assessment4/main/gene_expression.tsv",
+              destfile = "gene_expression.tsv")
+
+download.file("https://raw.githubusercontent.com/ghazkha/Assessment4/main/growth_data.csv",
+              destfile = "growth_data.csv")
+
+# now you can read them
+gene_data <- read.table("gene_expression.tsv", header = TRUE, sep = "\t", row.names = 1)
+growth_data <- read.csv("growth_data.csv")
+
+#
+
