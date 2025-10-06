@@ -33,3 +33,19 @@ str(head(cds))
 cds <- seqinr::read.fasta("sapro_cds.fa")
 str(head(cds))
 
+# How to run
+# 1. Counting coding sequences-
+nA <- length(cdsA)
+nB <- length(cdsB)
+
+q1_table <- data.frame(
+  Organism  = c(orgA_name, orgB_name),
+  CDS_count = c(nA, nB),
+  row.names = NULL
+)
+print(q1_table)
+
+Optional: save
+write.csv(q1_table, "Q1_cds_counts.csv", row.names = FALSE)
+
+
