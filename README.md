@@ -8,16 +8,111 @@ This repository has R tools and a R Markdown report that can be used with RStudi
 The repository is set up so that it is easy to understand and use again.  Files like gene_expression.tsv and growth_data.csv are stored in the data/ folder.  There are two subfolders, part1/ and part2/, inside the outputs/ folder that hold all the figures and tables that were made.  There are several R scripts in the scripts/ directory. Each one does a different part of the project, from importing and organizing data to visualizing it and analyzing sequences.  These tools are put together in the main R Markdown file, report.Rmd, to make the end report.  For faster work in RStudio and GitHub, supporting files like.Rproj and.gitignore are included.
 
 # Data Sources
-# download and save files locally
+download and save files locally:
 download.file("https://raw.githubusercontent.com/ghazkha/Assessment4/main/gene_expression.tsv",
               destfile = "gene_expression.tsv")
 
 download.file("https://raw.githubusercontent.com/ghazkha/Assessment4/main/growth_data.csv",
               destfile = "growth_data.csv")
 
-# now you can read them
+now you can read them:
 gene_data <- read.table("gene_expression.tsv", header = TRUE, sep = "\t", row.names = 1)
 growth_data <- read.csv("growth_data.csv")
+
+# How to Run
+1. Read file with gene IDs as row names; show first six genes
+Import the tab-separated file
+gene_data <- read.table("gene_expression.tsv", 
+                        header = TRUE, 
+                        sep = "\t", 
+                        row.names = 1)
+
+View the first 6 genes (rows)
+head(gene_data)
+
+2. Add a mean column; show first six
+Add a column for the mean expression value across all samples
+gene_data$mean_expression <- rowMeans(gene_data)
+
+Display the first six genes again
+head(gene_data)
+
+3. List top 10 genes by mean expression
+Sort by mean expression and display the top 10
+top10 <- head(gene_data[order(-gene_data$mean_expression), ], 10)
+top10
+
+4. Count genes with mean < 10
+Count how many genes have mean expression below 10
+low_genes <- sum(gene_data$mean_expression < 10)
+low_genes
+
+5. Histogram of mean values
+Plot histogram of mean expression values
+hist(gene_data$mean_expression,
+     main = "Distribution of Mean Gene Expression",
+     xlab = "Mean Expression Value",
+     ylab = "Frequency",
+     col = "lavender",
+     border = "pink")
+
+6. Import CSV; print column names
+Read the CSV data
+growth_data <- read.csv("growth_data.csv", header = TRUE)
+
+Display column names
+colnames(growth_data)
+
+7. Mean & SD at start (2005) and end (2020) by site
+aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm) ~ Site, 
+          data = growth_data,
+          FUN = function(x) c(mean = mean(x, na.rm = TRUE),
+                              sd = sd(x, na.rm = TRUE)))
+Make sure columns are numeric (safe if they already are)
+growth_data$Circumf_2005_cm <- as.numeric(growth_data$Circumf_2005_cm)
+growth_data$Circumf_2020_cm <- as.numeric(growth_data$Circumf_2020_cm)
+
+Compute mean & sd by Site
+agg <- aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm) ~ Site,
+                 data = growth_data,
+                 FUN = function(x) c(mean = mean(x, na.rm = TRUE),
+                                     sd   = sd(x,   na.rm = TRUE)))
+
+Unnest the matrix columns into a clean data frame
+out <- data.frame(
+  Site       = agg$Site,
+  Start_mean = agg$Circumf_2005_cm[, "mean"],
+  Start_sd   = agg$Circumf_2005_cm[, "sd"],
+  End_mean   = agg$Circumf_2020_cm[, "mean"],
+  End_sd     = agg$Circumf_2020_cm[, "sd"],
+  row.names = NULL
+)
+
+FORCE the display (works in scripts, Rmd, and notebooks)
+print(out)
+
+8. Boxplots at start vs end by site
+boxplot(Circumf_2005_cm ~ Site, data = growth_data,
+        main = "Tree Circumference in 2005 (Start)",
+        ylab = "Circumference (cm)", col = "pink")
+
+boxplot(Circumf_2020_cm ~ Site, data = growth_data,
+        main = "Tree Circumference in 2020 (End)",
+        ylab = "Circumference (cm)", col = "lavender")
+
+9. Mean growth over last 10 years at each site
+growth_data$growth_2010_2020 <- growth_data$Circumf_2020_cm - growth_data$Circumf_2010_cm
+aggregate(growth_2010_2020 ~ Site, data = growth_data, mean)
+
+10. t-test: is 10-year growth different between sites
+t.test(growth_2010_2020 ~ Site, data = growth_data)
+
+
+# Purpose of each script
+
+
+
+
 
 #
 
