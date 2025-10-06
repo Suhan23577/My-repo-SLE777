@@ -186,7 +186,8 @@ if (!exists("org1_name")) org1_name <- orgA_name
 if (!exists("org2_name")) org2_name <- orgB_name
 
 ```
-
+# Step 2
+# To process and analyse the data and for zipping or unzipping of the files
 
 ```{r}
 suppressPackageStartupMessages({
@@ -194,6 +195,8 @@ suppressPackageStartupMessages({
   library("R.utils") # general utilities like zip and unzip
 })
 ```
+# Step 3
+# The first thing this code does is load the R.utils package, which is used to unzip files.  It then sets the URL for a compressed FASTA file with coding sequences for Escherichia coli and Saprospirales bacteria. It downloads the file as ecoli_cds.fa.gz, unzips it with gunzip, and lastly lists the files in the current directory to make sure the download and extraction worked.
 
 ```{r}
 library("R.utils")
@@ -212,6 +215,8 @@ download.file(URL,destfile="sapro_cds.fa.gz")
 
 list.files()
 ```
+# Step 4
+# The code below uses the read.fasta function from the seqinr package to read the uncompressed FASTA file ecoli_cds.fa, which has coding sequences for E coli and Saprospirales bacteria.  The str(head(cds)) function then gives a structured summary of the first few sequences, which shows how the data is organized and what it contains.
 
 ```{r}
 library("seqinr")
@@ -226,6 +231,9 @@ str(head(cds))
 cds <- seqinr::read.fasta("sapro_cds.fa")
 str(head(cds))
 ```
+# Step 5, Q1
+# The function reads each organism's CDS FASTA into R as a list of DNA sequences. For example, cdsA for E. coli and cdsB for Saprospirales.  It just counts how many items are in each list (length(cdsA), length(cdsB)), as each item is a coding sequence (gene).  You may print or save a tidy table that compares the two creatures by putting those counts into a short data frame.
+
 
 ```{r}
 nA <- length(cdsA)
@@ -242,6 +250,9 @@ print(q1_table)
 # write.csv(q1_table, "Q1_cds_counts.csv", row.names = FALSE)
 
 ```
+# Step 6, Q2
+# To get the overall number of coding nucleotides, the code maps a length function over each CDS and adds them together.  This shows how many nucleotides are in coding regions for each organism (not the full genome, just the CDS).  Then it makes a two-row table with the totals next to each other, which makes it simple to see which creature has more coding DNA overall.
+
 
 ```{r}
 # Robust total-coding-nt calculator that works whether cdsA/cdsB are DNAStringSet, character, or list
@@ -266,6 +277,8 @@ q2_table <- data.frame(
 print(q2_table)
 
 ```
+# Step 7, Q3
+# The code gets a vector of CDS lengths for each gene in each organism.  It calculates summary statistics (mean, median, SD, min, max) to measure how central and spread out the data is.  Then it makes a grouped boxplot to show how the lengths of the CDS are spread out, the median bar, the interquartile range, and any long tails.  You use these summaries and the boxplot to say if one organism's genes are longer or more variable than anothers.
 
 ```{r}
 # Calculate CDS lengths for each gene
@@ -312,7 +325,8 @@ boxplot(list(E_coli = cds_len_A, Saprospirales = cds_len_B),
 grid()
 
 ```
-
+# Step 8, Q4
+# First, all CDS are put together into one lengthy DNA stream for each organism, and then the amount of each base (A,C,G,T) is figured out.  That clearly reveals a bias in composition (for example, GC-rich vs AT-rich).  After that, each CDS is turned into a protein (cut down to multiples of three, which is the usual genetic code). Then, all the proteins are put together and the amino acids are counted to produce proteome-level frequencies.  There are two bar charts, one for nucleotides and one for amino acids.  You look at changes (such greater GC, more Gly,Ala,Pro,Arg) and connect the makeup of DNA to the makeup of proteins.
 
 ```{r}
 ## --- helpers you need to add once (put above your code) ---
@@ -397,6 +411,8 @@ legend("topright", legend = c("E. coli","Saprospirales"), bty = "n",
 grid()
 
 ```
+# Step 9, Q5
+# The code goes over every CDS in frame 1, cuts off bases at the end so that the lengths are multiples of three, and counts sense codons (not stop codons, ambiguous triplets are eliminated).  It uses a codon,amino-acid map to figure out RSCU for each codon. This is the number of times the codon is used divided by the number of times it is expected to be used by synonymous codons for that amino acid.  Then, the bias score is calculated as the weighted mean of RSCU−1, where the weights are the number of codons. A higher value means a larger overall codon bias.  It also calculates GC3 (the percentage of G/C at the third position) as a separate summary of bias.  Lastly, it gives you a codon table (counts, per-thousand, RSCU for both species) and two graphs, a side-by-side RSCU bar plot to show codons that are utilized too much or too little, and a scatter plot that compares RSCU(E. coli) to RSCU(Saprospirales) to show where the two organisms differ the most.
 
 ```{r}
 ## ================================
@@ -575,6 +591,9 @@ par(op)
 
 
 ```
+# Step 10, Q6
+# To make one amino acid stream for each organism, all CDS are translated, concatenated, and stop characters are taken out.  For each k (3, 4, 5), the code counts the number of overlapping peptide k-mers that are really there and then uses a 0th-order background (the product of the frequencies of single amino acids times the number of windows) to figure out how many should be there.  Enrichment is seen or predicted; values more than 1 are over-represented, whereas values less than 1 are under-represented.  It then ranks k-mers by how much they are enriched in Saprospirales to find the Top-10 over and under motifs. It also checks how much they are enriched in E. coli to see whether they are also extreme there.  There are three plots for each k: a scatter plot of enrichments with a 1:1 line to show worldwide agreement, and two bar charts that compare enrichments for the Top-10 over and Top-10 under themes.  You talk about how variations are linked to GC-driven amino-acid pools, lineage-specific protein families and repetitions, structural vs. disordered areas, membrane and secretory signals, and translation and tRNA selection.
+
 
 ```{r}
 # Build AA character vectors (exclude NA and stop for counting)
